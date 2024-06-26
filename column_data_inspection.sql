@@ -295,11 +295,13 @@ SELECT * FROM products
 					GROUP BY trim(name)
 					HAVING COUNT(DISTINCT p.sku) > 1
 					ORDER BY sku_count DESC
+				-- There are FIVE total SKUs for 'Sunglasses', four dupes, and four Men's Zip Hoodie, three dupes. Is this reasonable? 
+				-- you could definitely have 5 different sunglasses styles recorded as separate SKUs and stored as "sunglasses" as name! Don't change it.
 
 			-- How many unique products exist by their name only?
 					SELECT name, trim(name) FROM products
 					ORDER BY trim(name)
-					SELECT DISTINCT trim(name) FROM products
+					SELECT DISTINCT trim(name) FROM products -- there are 309 unique product names in the entity
 
 	-- name all present, but requires trimming e.g. leading whitespace and possibly trailing space
 		SELECT * FROM products WHERE name IS NOT NULL
