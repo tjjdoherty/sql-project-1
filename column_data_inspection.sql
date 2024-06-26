@@ -14,21 +14,36 @@ SELECT * FROM all_sessions -- 15134 rows
 	-- time - all present
 		SELECT * FROM all_sessions WHERE time IS NULL
 
-	-- country - all present, however there are 24 '(not set)' entries.
+	-- country - all present, however there are 24 '(not set)' entries. Keep those records, they're small but maybe they have a city entry
 		SELECT * FROM all_sessions
 		WHERE country IS NOT NULL
 			SELECT DISTINCT country FROM all_sessions -- (not set) is the only null-ish entry
+		
+			SELECT country, COUNT(country) FROM all_sessions
+			GROUP BY country
+			ORDER BY count(country) DESC
 
+			-- are the country (not set) records also city (not set) - yes they are
+			SELECT city, country FROM all_sessions WHERE country = '(not set)'
+	
 	-- city - all present, check for null-ish city entries
 		SELECT * FROM all_sessions
 		WHERE city IS NOT NULL
 				SELECT DISTINCT city FROM all_sessions ORDER BY city 	
 		
-			-- (not set) appears again... San Francisco, SOUTH San Francisco (the same city?), not available in demo dataset also appears
+			-- (not set) appears again... San Francisco, SOUTH San Francisco (the same city?), 'not available in demo dataset' also appears
 		
 			SELECT city FROM all_sessions WHERE city IN ('not available in demo dataset', '(not set)')
 			-- 8656 entries, over half of the city data is not available...
+	
+			-- Let's group by to see if there's messy entries for cities e.g. typos, grammar
+			SELECT DISTINCT city, COUNT(city) FROM all_sessions -- 266 unique cities
+			GROUP BY city
+			ORDER BY COUNT(city) DESC
+			
+	
 			-- CONCLUSION: we need this data because of its relevance to Q1 and other questions
+			
 
 	
 	-- totaltransactionrevenue - only 81 records with this present 
@@ -38,10 +53,10 @@ SELECT * FROM all_sessions -- 15134 rows
 			-- but they are very large numbers describing items in the tens of dollar range. divide by 1,000,000 when calculating?
 
 
-	-- transactions - only 81 non-null records appear, extremely likely to be the same 81 from t.t.r above. every single one of 81 is '1' and the rest null
-		SELECT * FROM all_sessions WHERE transactions IS NOT NULL
+	-- transactions - only 81 non-null records appear and all are 1, very likely to be the same 81 from t.t.r above. every single one of 81 is '1' and the rest null
+		SELECT * FROM all_sessions WHERE transactions = '1'
 	
-			-- CONCLUSION: this is a junk row bringing no analytical value
+			-- CONCLUSION: this is potentially useful for telling me if a purchase took place, and what other columns are also indicators of this
 
 	-- timeonsite - 11834 rows present, keep for now
 		SELECT * FROM all_sessions WHERE timeonsite IS NOT NULL
@@ -75,8 +90,8 @@ SELECT * FROM all_sessions -- 15134 rows
 		SELECT type, COUNT(type) FROM all_sessions
 		GROUP BY type
 
-	-- productrefundamount - ALL NULL, ignore
-		SELECT * FROM all_sessions WHERE productrefundamount IS NULL
+	-- productrefundamount - ALL NULL, ignore / delete
+		SELECT * FROM all_sessions WHERE productrefundamount IS NOT NULL
 
 	-- productquantity - 53 non-null
 		SELECT * FROM all_sessions WHERE productquantity IS NOT NULL
@@ -88,7 +103,7 @@ SELECT * FROM all_sessions -- 15134 rows
 		SELECT * FROM all_sessions WHERE productrevenue IS NOT NULL
 	
 			-- why these four specifically? Spot check two of them to see if it has null and non-null productrevenue - they do
-			SELECT distinct(productrevenue) FROM all_sessions
+			SELECT distinct(productrevenue), v2productname FROM all_sessions
 			WHERE v2productname IN ('Compact Bluetooth Speaker', 'Reusable Shopping Bag')
 			
 			-- CONCLUSION: there are four non-null productrevenue entries and those products have both null and non-null product revenues
@@ -121,7 +136,7 @@ SELECT * FROM all_sessions -- 15134 rows
 
 			-- CONCLUSION: important column that we must keep. But, there are a number of dupes and many of them have the uncommon numerical product_skus.
 			-- Ideally we would change these product_skus to the product's alphanumeric product_sku - one is likely the old SKU but its not clear which.
-			-- so I will leave it unchanged for now and try to group by distinct v2productname
+			-- Exploring product variant reveals that the multiple same product names have different colours or sizes e.g. RED/BLUE Google Sunglasses, MD Men's Tee
 
 	-- v2productcategory - all present but 757 (not set)
 		SELECT * FROM all_sessions WHERE v2productcategory IS NOT NULL
@@ -133,8 +148,11 @@ SELECT * FROM all_sessions -- 15134 rows
 			-- CONCLUSION: important for the questions in the project and will be used, 
 			-- Some trimming e.g. LTRIM "Home/" or trim to the last subdomain if we have time would be good
 
-	-- productvariant - all present but 15094 of them are (not set) and the remaining are various size descriptions - low value
+	-- productvariant - all present but 15094 of them are (not set) and the remaining are various size descriptions
 		SELECT * FROM all_sessions WHERE productvariant != '(not set)'
+
+			-- Reconciled this with V2productname where there are duplicates - this column differentiates dupe productnames e.g. Red/Blue sunglasses, MD/LG Men's Tee
+			-- It is important but should be concatenated into v2productname and dropped in my opinion as this column is 99.8% empty
 
 	-- currencycode - 14862 present, all USD, other 272 null. Low value because almost all transactions are USD
 		SELECT * FROM all_sessions WHERE currencycode IS NOT NULL
@@ -143,10 +161,10 @@ SELECT * FROM all_sessions -- 15134 rows
 			GROUP BY country, currencycode
 
 	-- itemquantity - entirely null, ignore / delete
-		SELECT * FROM all_sessions WHERE itemquantity IS NULL
+		SELECT * FROM all_sessions WHERE itemquantity IS NOT NULL;
 
 	-- itemrevenue - entirely null, ignore / delete
-		SELECT * FROM all_sessions WHERE itemrevenue IS NULL
+		SELECT * FROM all_sessions WHERE itemrevenue IS NOT NULL;
 
 	-- transactionrevenue - all but 4 records, the same records in productrevenue
 		SELECT * FROM all_sessions WHERE transactionrevenue IS NOT NULL
@@ -164,16 +182,24 @@ SELECT * FROM all_sessions -- 15134 rows
 			SELECT DISTINCT pagetitle FROM all_sessions
 			WHERE pagetitle LIKE '%Confirm%'
 			OR pagetitle LIKE '%Checkout%'
+			-- how many fields have Checkout Confirmation? - 9 in total, all /ordercompleted.html, check out pagepathlevel 1 below
+			SELECT * FROM all_sessions WHERE pagetitle = 'Checkout Confirmation'
 
+	
 	-- searchkeyword - all absent, ignore
-		SELECT * FROM all_sessions WHERE searchkeyword IS NULL
+		SELECT * FROM all_sessions WHERE searchkeyword IS NOT NULL
 
-	-- pagepathlevel1 - all present but nothing interesting, ignore
+	-- pagepathlevel1 - all present with some indicators of a checkout occurring
 		SELECT * FROM all_sessions WHERE pagepathlevel1 IS NOT NULL
 			-- on exploration most say google redesign, are they all like this? all but 816 are and they point to store, asearch...nothing interesting
 			SELECT * FROM all_sessions
 			WHERE pagepathlevel1 != '/google+redesign/'
-			-- CONCLUSION: ignore
+
+			-- from transactionrevenue earlier, pagepathlevel1 reveals order completed for 9 entries:
+			SELECT * FROM all_sessions WHERE pagepathlevel1 = '/ordercompleted.html'
+			
+	
+			-- CONCLUSION: keep for its ability to point out confirmed orders
 
 	-- ecommerceaction_type -- all present
 		SELECT * FROM all_sessions
@@ -181,12 +207,24 @@ SELECT * FROM all_sessions -- 15134 rows
 			-- these small integer values appear to represent stages in the checkout journey 0 - 6
 			SELECT DISTINCT ecommerceaction_type FROM all_sessions
 
-	-- ecommerceaction_step - all present
+			-- see above - looks likely that ecommerceaction_type 6 means a checkout happened - just 9 fields
+			SELECT pagepathlevel1, pagetitle FROM all_sessions WHERE ecommerceaction_type = 6; -- all have pagetitle = checkout confirmation
+			SELECT pagepathlevel1, pagetitle FROM all_sessions WHERE ecommerceaction_type = 5; -- 31 records, Checkout review/Your Info / Payment Method
+			SELECT pagepathlevel1, pagetitle FROM all_sessions WHERE ecommerceaction_type = 4; -- 1 record, pagepath is /basket, Pagetitle is Shopping Cart
+			SELECT pagepathlevel1, pagetitle FROM all_sessions WHERE ecommerceaction_type = 3; -- 37 records record, pagepath is google+redesign (not useful), pagetitle is product name
+			SELECT pagepathlevel1, pagetitle FROM all_sessions WHERE ecommerceaction_type = 2; -- 137 records, same as _type 3 above, search results and looking at products
+			SELECT pagepathlevel1, pagetitle FROM all_sessions WHERE ecommerceaction_type = 1; -- 134 records, same as above
+
+			-- CONCLUSION: this is useful because I can see people going to search, stages of the checkout process AND confirmed purchases with _type 6
+	
+	-- ecommerceaction_step - all present, 15134 rows
 		SELECT * FROM all_sessions
 		WHERE ecommerceaction_step IS NOT NULL
 			SELECT DISTINCT ecommerceaction_step, COUNT(ecommerceaction_step) FROM all_sessions
 			GROUP BY ecommerceaction_step
-			SELECT * FROM all_sessions WHERE ecommerceaction_step = 3
+			SELECT * FROM all_sessions WHERE ecommerceaction_step = 3; -- 5 records all link to /revieworder, Checkout Review
+			SELECT * FROM all_sessions WHERE ecommerceaction_step = 2; -- 13 records, all links to Payment Method in pagetitle
+			SELECT * FROM all_sessions WHERE ecommerceaction_step = 1 -- 15116 rows
 
 	-- ecommerceaction_option - 31 rows non-null and they appear to relate to finishing an order
 		SELECT * FROM all_sessions
@@ -282,21 +320,21 @@ SELECT * FROM products
 		ORDER BY trim(name)
 			-- cross-reference with all_sessions.product_sku, there is are no disagreeing SKUs on the same item between entities,
 			-- BUT some products do have multiple SKUs in both entities
-			SELECT DISTINCT trim(name) as trim_name, p.sku, als.product_sku FROM products p
-			JOIN all_sessions als ON p.sku = als.product_sku
-			ORDER BY trim(name)
-				--How many products have multiple SKUs? There are 90 products with at least 2 SKUs and 190 SKUs representing a product that already has a SKU
-					SELECT 
-							DISTINCT trim(name) as trim_name, 
-							COUNT(DISTINCT p.sku) AS sku_count,
-							SUM(COUNT(DISTINCT p.sku)) OVER (ORDER BY COUNT(DISTINCT p.sku) DESC) AS running_total
-					FROM products p
-					JOIN all_sessions als ON p.sku = als.product_sku
-					GROUP BY trim(name)
-					HAVING COUNT(DISTINCT p.sku) > 1
-					ORDER BY sku_count DESC
-				-- There are FIVE total SKUs for 'Sunglasses', four dupes, and four Men's Zip Hoodie, three dupes. Is this reasonable? 
-				-- you could definitely have 5 different sunglasses styles recorded as separate SKUs and stored as "sunglasses" as name! Don't change it.
+				SELECT DISTINCT trim(name) as trim_name, p.sku, als.product_sku FROM products p
+				JOIN all_sessions als ON p.sku = als.product_sku
+				ORDER BY trim(name)
+					--How many products have multiple SKUs? There are 90 products with at least 2 SKUs and 190 SKUs representing a product that already has a SKU
+						SELECT 
+								DISTINCT trim(name) as trim_name, 
+								COUNT(DISTINCT p.sku) AS sku_count,
+								SUM(COUNT(DISTINCT p.sku)) OVER (ORDER BY COUNT(DISTINCT p.sku) DESC) AS running_total
+						FROM products p
+						JOIN all_sessions als ON p.sku = als.product_sku
+						GROUP BY trim(name)
+						HAVING COUNT(DISTINCT p.sku) > 1
+						ORDER BY sku_count DESC
+					-- There are FIVE total SKUs for 'Sunglasses', four dupes, and four Men's Zip Hoodie, three dupes. Is this reasonable? 
+					-- you could definitely have 5 different sunglasses styles recorded as separate SKUs and stored as "sunglasses" as name! Don't change it.
 
 			-- How many unique products exist by their name only?
 					SELECT name, trim(name) FROM products
