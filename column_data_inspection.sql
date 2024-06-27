@@ -41,6 +41,10 @@ SELECT * FROM all_sessions -- 15134 rows
 			GROUP BY city
 			ORDER BY COUNT(city) DESC
 			
+			-- Can the city column help us fill in a missing country column?
+			SELECT country, city FROM all_sessions
+			WHERE country = '(not set)'
+
 	
 			-- CONCLUSION: we need this data because of its relevance to Q1 and other questions
 			
