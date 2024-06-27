@@ -105,7 +105,25 @@
 
 	-- We also need to update the (not set) for the big hitters e.g. YouTube Decals, Google Kick Ball to improve the product category data
 
-			
+		UPDATE all_sessions_clean
+		SET v2productcategory = REPLACE(REPLACE(v2productcategory, '(not set)', 'Accessories/Sports & Fitness'), '${escCatTitle}', 'Accessories/Sports & Fitness')
+		WHERE v2productname = 'Google Kick Ball';
+
+		UPDATE all_sessions_clean
+		SET v2productcategory = REPLACE(REPLACE(v2productcategory, '(not set)', 'Accessories'), '${escCatTitle}', 'Accessories')
+		WHERE v2productname = 'Google Sunglasses';
+
+		UPDATE all_sessions_clean
+		SET v2productcategory = REPLACE(REPLACE(v2productcategory, '(not set)', 'Nest/Nest-USA'), '${escCatTitle}', 'Nest/Nest-USA')
+		WHERE v2productname = 'Nest® Cam Outdoor Security Camera - USA';
+
+		UPDATE all_sessions_clean
+		SET v2productcategory = REPLACE(REPLACE(v2productcategory, '(not set)', 'YouTube'), '${escCatTitle}', 'YouTube')
+		WHERE v2productname = 'YouTube Custom Decals';
+
+			-- Let's QA that we've reduced the number of (not set) in the all_sessions-clean. 754 counted in _clean, 776 counted in original below.
+			SELECT COUNT(*) FROM all_sessions_clean WHERE v2productcategory IN ('(not set)', '${escCatTitle}'); 
+			SELECT COUNT(*) FROM all_sessions WHERE v2productcategory IN ('(not set)', '${escCatTitle}');
 
 -- Cleaning of city and country. Maybe some cities and countries are erroneous? Remove the not set, not available etc...
 

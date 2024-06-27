@@ -83,14 +83,13 @@
 		GROUP BY sesh.v2productcategory
 		ORDER BY COUNT(p.orderedquantity) DESC
 					-- mindful that this is the NUMBER OF ORDERS not number of products ordered 
-					-- YouTube very popular, men's T shirts specifically also very popular well above other categories
+					-- YouTube very popular probably due to decals, men's T shirts specifically also very popular well above other categories
 
 		SELECT p.name, p.orderedquantity, sesh.v2productcategory
 		FROM products_clean p
 		JOIN all_sessions_clean sesh ON p.sku = sesh.product_sku
 		ORDER BY sesh.v2productcategory
 
-					-- there is a lot of ordered quantities with v2productcategory = '${escCatTitle}' that needs cleaning and (not set)
 				
 		-- now we'll try to add city, country and transactions
 			
