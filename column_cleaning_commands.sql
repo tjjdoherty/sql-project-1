@@ -37,8 +37,8 @@
 	ALTER TABLE analytics_clean DROP COLUMN userid;
 	ALTER TABLE analytics_clean DROP COLUMN socialengagementtype;
 
-	SELECT * FROM all_sessions_clean
-	SELECT * FROM analytics_clean
+	SELECT * FROM all_sessions_clean;
+	SELECT * FROM analytics_clean;
 
 -- Concatenate v2productname and productvariant to add the appropriate color, size e.g. Men's Tee XL, Google Sunglasses RED,
 -- There are many product names that fit this pattern
@@ -47,14 +47,37 @@
 								WHEN productvariant = '(not set)' THEN v2productname
 								ELSE v2productname || ' ' || productvariant
 							END;
-	SELECT v2productname FROM all_sessions_clean WHERE productvariant IS NOT NULL AND productvariant != '(not set)'
 
 	-- this has introduced some mess with 'Single Option Only' but I can just trim this out if it doesn't add value
 	-- now we can drop the productvariant column
 	ALTER TABLE all_sessions_clean DROP COLUMN productvariant;
 
-	SELECT * FROM all_sessions
-		
+	-- The productvariant column needed whitespace trimming before concatenation. A few instances where '  ' two whitespaces exist.
+	-- I can use a REGEXP_replace for this:
+		SELECT v2productname, REGEXP_REPLACE(v2productname, '\s{2,}', ' ', 'g') 
+		FROM all_sessions_clean
+		WHERE v2productname LIKE '%  %'
+		-- here's the Update command to all_sessions_clean
+			UPDATE all_sessions_clean
+				SET v2productname = REGEXP_REPLACE(v2productname, '\s{2,}', ' ', 'g')
+
+			-- QA - check for double whitespace in the table ensuring it's complete. The below query should have no records, zero. Checks out.
+				SELECT v2productname FROM all_sessions_clean WHERE v2productname LIKE '%  %';
+
 -- trim Home/ from v2 product category in all_sessions_clean, as it is the top level domain of the website, not much analytical value
 	-- over 14300 records of 15000 total have 'Home/' in them so this will help us differentiate records
-		
+
+	-- check the query works with a SELECT statement first
+		SELECT
+				v2productcategory,
+				REPLACE(v2productcategory, 'Home/', '')
+		FROM all_sessions_clean
+
+			-- Now we update the column
+			UPDATE all_sessions_clean
+				SET v2productcategory = REPLACE(v2productcategory, 'Home/', '');
+
+			-- We can also trim / off of the right hand side - no need for it. Test with SELECT statement first, then update.
+				SELECT RTRIM(v2productcategory, '/') FROM all_sessions_clean
+			UPDATE all_sessions_clean
+				SET v2productcategory = RTRIM(v2productcategory, '/')

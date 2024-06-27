@@ -134,6 +134,8 @@ SELECT * FROM all_sessions -- 15134 rows
 			WHERE v2productname IN ('Google Sunglasses', 'Google Men''s Long Sleeve Raglan Ocean Blue', 'Google Women''s V-Neck Tee Grey')
 			GROUP BY v2productname, product_sku
 
+			SELECT v2productname, productvariant FROM all_sessions WHERE productvariant IS NOT NULL AND productvariant != '(not set)'
+	
 			-- CONCLUSION: important column that we must keep. But, there are a number of dupes and many of them have the uncommon numerical product_skus.
 			-- Ideally we would change these product_skus to the product's alphanumeric product_sku - one is likely the old SKU but its not clear which.
 			-- Exploring product variant reveals that the multiple same product names have different colours or sizes e.g. RED/BLUE Google Sunglasses, MD Men's Tee
