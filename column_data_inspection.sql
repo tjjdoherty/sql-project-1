@@ -250,7 +250,6 @@ SELECT * FROM all_sessions -- 15134 rows
 			-- from transactionrevenue earlier, pagepathlevel1 reveals order completed for 9 entries:
 			SELECT * FROM all_sessions WHERE pagepathlevel1 = '/ordercompleted.html'
 			
-	
 			-- CONCLUSION: keep for its ability to point out confirmed orders
 
 	-- ecommerceaction_type -- all present
@@ -460,11 +459,50 @@ SELECT * FROM sales_report
 		-- it appears the products orderedquantity is more comprehensive, much higher figures generally. 367 of the 454 joined SKUs have more orders in products table.
 		-- only 83 of the skus have the same number of orders across the tables. I'll use products table - sales_report could just be a quarterly report.
 
+	-- We have played with some popular products like Google Kick Ball and it is just referred to as Kick Ball in products. I'll confirm the same product_SKU
+		SELECT sesh.v2productname, p.name
+		FROM all_sessions_clean sesh
+		JOIN products_clean p ON p.sku = sesh.product_sku
+
+		-- above query confirms that the SKUs match, the brand e.g. Google Rucksack does not appear in the products table, only 'Rucksack' will appear.
+		-- we don't need to change the name in products table, but it would be more descriptive in reports to use the product name and category from all_sessions
+
+
 -- FINAL CONCLUSIONS OF THE DATA INSPECTION
 
 -- entities: 
--- sales_by_sku is extraneous data with the exception of 8 SKUs that account for only 5 individual item orders,
--- everything else it offers is accessed by sales_report
+-- sales_by_sku is extraneous data with the exception of 8 SKUs that account for only 5 individual item orders everything else it offers is accessed by sales_report
+-- all_sessions has more descriptive names for the products with the brands included in the name and should be used instead of the names in the products table. it also has the product categories.
+-- products table has the more comprehensive orderedquantity data than sales_report which appears to be a quarterly report
+
+-- analytics has units_sold and fullvisitorid, which we could join with all_sessions to identify where things have been bought
+	
+	-- There appears to be a link between unit_price, units_sold and multiplied to get revenue
+	SELECT visitid, unit_price, units_sold, revenue FROM analytics_clean WHERE revenue IS NOT NULL
+
+	SELECT visitid, units_sold, revenue, unit_price, (unit_price * units_sold) AS total_price
+	FROM analytics_clean WHERE units_sold > 1 AND revenue IS NULL
+
+		-- in the above query total_price column is a VERY close match to the revenue column when it's not null, when it's null we could complete 20,000 new records
+		-- There's a few dollars added to revenue though - maybe a delivery, service fee or tax?
+		
+		-- the below query shows that there is a small additional amount to revenue after multiplying unit_cost by units_sold
+		-- from spot checking, it looks far more likely to be a flat $2.50 fee to a $13.59 order rather than an 18% tax on $13.59
+		-- being able to use unit_cost * units_sold to complete the revenue column seems quite sensible and would add enormous analytical value
+		-- I will be making this change in analytics_clean for question 5
+	
+			SELECT 
+					visitid,
+					unit_price,
+					units_sold,   
+					(unit_price * units_sold) AS total_price,
+					revenue,
+					ROUND(100 * (revenue / (unit_price * units_sold)), 2) - 100 AS rev_percent_fee,
+					ROUND(revenue - (unit_price * units_sold), 2) AS flat_extra_fee
+			FROM analytics_clean
+			WHERE revenue IS NOT NULL 
+			
+
 
 -- Questions: 
 -- They revolve around the city and country data which is accessed by all_sessions, 
@@ -473,4 +511,4 @@ SELECT * FROM sales_report
 -- units_sold should be converted to a small_int and this is a useful measure of orders, linking fullvisitorid 
 	-- (we could group units_sold by fullvisitorid and their country)
 
--- Trimming of the product name is a simple effective clean up
+-- Trimming of the product name is a simple effective clean up, adding the size/colours from product variant in order to remove that column which is almost empty
