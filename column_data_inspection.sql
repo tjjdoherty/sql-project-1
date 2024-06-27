@@ -174,10 +174,12 @@ SELECT * FROM all_sessions -- 15134 rows
 
 	-- transactionrevenue - all but 4 records, the same records in productrevenue
 		SELECT * FROM all_sessions WHERE transactionrevenue IS NOT NULL
+		SELECT transactionrevenue, totaltransactionrevenue FROM all_sessions WHERE transactionrevenue IS NOT NULL
+			
 			-- itemrevenue and transaction revenue both have the same 4 records, anything interesting?
-			SELECT productrevenue, transactionrevenue FROM all_sessions
+			SELECT productrevenue, transactionrevenue FROM all_sessions_clean
 			WHERE transactionrevenue IS NOT NULL
-			-- CONCLUSION: ignore this
+			-- CONCLUSION: only 4 records appear and totaltransactionrevenue is the exact same values for all 4. this is just extraneous data to be deleted
 
 	-- transactionid - 9 distinct non-null rows, ignore for now
 		SELECT * FROM all_sessions WHERE transactionid IS NOT NULL
@@ -376,7 +378,7 @@ SELECT * FROM products
 	-- these 918... SKUs may be new items not released yet
 
 
--- sales_report - 454 entries. If this information agrees with sales_by_sku then we can just ignore sales_by_sku, it is duplicate information entirely
+-- sales_report - 454 entries. This information agrees with sales_by_sku so we can just ignore sales_by_sku, it is duplicate information entirely
 
 SELECT * FROM sales_report
 
@@ -395,11 +397,24 @@ SELECT * FROM sales_report
 			WHERE product_sku IN ( '9184677', '9182779', '9182763', 'GGOEYAXR066128', '9182182', '9180753', '9184663', 'GGOEGALJ057912')
 		
 
-	-- does the total_ordered match the number in sales_by_sku? YES.
+	-- does the total_ordered match the number in sales_by_sku? YES. So sales_by_sku is not needed and can be ignored.
 		SELECT DISTINCT sr.product_sku, sk.total_ordered as ordered_sk, sr.total_ordered as ordered_sr FROM sales_report sr
 		JOIN sales_by_sku sk USING(total_ordered)
 		WHERE sk.total_ordered != sr.total_ordered
 
+			
+	-- Inspection of sales_report and products ordered quantities. 
+	-- I want to QA that the ordered quantity / total_ordered agree with each other or not
+		SELECT * FROM products_clean
+		SELECT * FROM sales_report_clean
+			
+		SELECT p.sku, p.name, sc.name, p.orderedquantity, sc.total_ordered
+		FROM products_clean p
+		JOIN sales_report_clean sc ON p.sku = sc.product_sku
+		WHERE p.orderedquantity = sc.total_ordered
+
+		-- it appears the products orderedquantity is more comprehensive, much higher figures generally. 367 of the 454 joined SKUs have more orders in products table.
+		-- only 83 of the skus have the same number of orders across the tables. I'll use products table - sales_report could just be a quarterly report.
 
 -- FINAL CONCLUSIONS OF THE DATA INSPECTION
 

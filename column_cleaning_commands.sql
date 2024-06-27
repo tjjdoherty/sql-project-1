@@ -23,6 +23,9 @@
 	SELECT distinct(name) FROM products_clean -- there are only 309 distinct names of products now.
 		order by name
 
+-- This should be done in the sales_report_clean table too:
+		UPDATE sales_report_clean SET name = trim(name);
+
 -- I will create a _clean version of the other tables: all_sessions_clean, analytics_clean, sales_report_clean, sales_by_sku not needed (see column_data_inspection)
 	CREATE TABLE all_sessions_clean AS (SELECT * FROM all_sessions);
 	CREATE TABLE analytics_clean AS (SELECT * FROM analytics);
@@ -33,6 +36,7 @@
 	ALTER TABLE all_sessions_clean DROP COLUMN productrefundamount;
 	ALTER TABLE all_sessions_clean DROP COLUMN itemquantity;
 	ALTER TABLE all_sessions_clean DROP COLUMN itemrevenue;
+	ALTER TABLE all_sessions_clean DROP COLUMN transactionrevenue;
 	ALTER TABLE all_sessions_clean DROP COLUMN searchkeyword;
 	ALTER TABLE analytics_clean DROP COLUMN userid;
 	ALTER TABLE analytics_clean DROP COLUMN socialengagementtype;
