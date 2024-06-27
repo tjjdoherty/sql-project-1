@@ -144,14 +144,58 @@ SELECT * FROM all_sessions -- 15134 rows
 			-- Ideally we would change these product_skus to the product's alphanumeric product_sku - one is likely the old SKU but its not clear which.
 			-- Exploring product variant reveals that the multiple same product names have different colours or sizes e.g. RED/BLUE Google Sunglasses, MD Men's Tee
 
-	-- v2productcategory - all present but 757 (not set)
+	-- v2productcategory - all present but 757 (not set) - IMPORTANT COLUMN
+	
 		SELECT * FROM all_sessions WHERE v2productcategory IS NOT NULL
+	
 			-- how many categories? 74 appear from the below query, but it's messy and has lots of duplicates. COUNT queried to see the distribution
 			SELECT v2productcategory, COUNT(v2productcategory) FROM all_sessions
 			GROUP BY v2productcategory
-			ORDER BY COUNT(v2productcategory) DESC
+			ORDER BY COUNT(v2productcategory) DESC;
 
-			-- CONCLUSION: important for the questions in the project and will be used, 
+			-- 757 entries with (not set) and 757 with ${escCatTitle} that could harm the orderedquantity downstream
+			SELECT DISTINCT(v2productcategory), COUNT(v2productcategory) FROM all_sessions
+			GROUP BY v2productcategory;
+
+				-- which products are in here with these nullish categories, we can probably fill some of them in
+				SELECT DISTINCT v2productname, v2productcategory FROM all_sessions
+				WHERE v2productcategory IN ('(not set)', '${escCatTitle}');
+
+					-- i won't have time to change several hundred different entries, I will update the products with the largest orderedquantities
+					-- identified in the below query
+					SELECT DISTINCT(sesh.v2productname), SUM(p.orderedquantity)
+					FROM all_sessions sesh
+					JOIN products p ON sesh.product_sku = p.sku
+					WHERE sesh.v2productcategory IN ('(not set)', '${escCatTitle}')
+					GROUP BY DISTINCT(sesh.v2productname)
+					ORDER BY SUM(p.orderedquantity) DESC;
+
+						-- previous query: let's find the correct categories for the most ordered items
+						SELECT DISTINCT v2productcategory, v2productname FROM all_sessions
+						WHERE v2productname IN ('Google Kick Ball', 'Google Sunglasses','YouTube Custom Decals', 'SPF-15 Slim & Slender Lip Balm', 'Nest® Cam Outdoor Security Camera - USA')
+						ORDER BY v2productname;
+
+							-- there is some disagreement between the categories e.g. Google Kick Ball - some records Accessories, some Lifestyle. 
+							-- I'll make a call and put the null-ish entries in one existing category
+							-- below are the test queries before update query in other file. Nested REPLACES
+
+							SELECT v2productname, v2productcategory, REPLACE(REPLACE(v2productcategory, '(not set)', 'Accessories/Sports & Fitness'), '${escCatTitle}', 'Accessories/Sports & Fitness')
+							FROM all_sessions
+							WHERE v2productname = 'Google Kick Ball';
+
+							SELECT v2productname, v2productcategory, REPLACE(REPLACE(v2productcategory, '(not set)', 'Accessories'), '${escCatTitle}', 'Accessories')
+							FROM all_sessions
+							WHERE v2productname = 'Google Sunglasses';
+
+							SELECT v2productname, v2productcategory, REPLACE(REPLACE(v2productcategory, '(not set)', 'Nest/Nest-USA'), '${escCatTitle}', 'Nest/Nest-USA')
+							FROM all_sessions
+							WHERE v2productname = 'Nest® Cam Outdoor Security Camera - USA';
+
+							SELECT v2productname, v2productcategory, REPLACE(REPLACE(v2productcategory, '(not set)', 'YouTube'), '${escCatTitle}', 'YouTube')
+							FROM all_sessions
+							WHERE v2productname = 'YouTube Custom Decals';
+
+			-- CONCLUSION: important for the questions in the project and will be used, and needs cleaning (not set) and ${escCatTitle} for ordered quantity
 			-- Some trimming e.g. LTRIM "Home/" or trim to the last subdomain if we have time would be good
 
 	-- productvariant - all present but 15094 of them are (not set) and the remaining are various size descriptions
@@ -248,7 +292,7 @@ SELECT * FROM all_sessions -- 15134 rows
 			-- it doesn't appear to show that the order is complete, only Review which is seen in pagetitle and pagepathlevel1
 			-- therefore there's still a chance that the user has abandoned the cart.
 
-
+				
 -- analytics - 4,301,122 records (all present) and it is likely a quarterly report, given the 3 month date window May 1 - Aug 1, 2017
 
 SELECT * FROM analytics
@@ -274,15 +318,15 @@ SELECT * FROM analytics
 
 	-- fullvisitorid - all present, 120018 uniques, 3896 of the fullvisitorid's in all_sessions are here
 		SELECT * FROM analytics WHERE fullvisitorid IS NOT NULL
-		SELECT DISTINCT fullvisitorid FROM analytics WHERE fullvisitorid IS NOT NULL
+		SELECT DISTINCT fullvisitorid FROM analytics WHERE fullvisitorid IS NOT NULL;
 		SELECT DISTINCT anl.fullvisitorid FROM analytics anl JOIN all_sessions als ON als.fullvisitorid = anl.fullvisitorid
 
 	-- userid - all empty, ignore.
-		SELECT * FROM analytics WHERE userid IS NOT NULL
+		SELECT * FROM analytics WHERE userid IS NOT NULL;
 
 	-- channelgrouping - all present, 8 types e.g. referral, social, affiliate... good quality and interesting to source of commerce /purchases for marketing
-		SELECT * FROM analytics WHERE channelgrouping IS NOT NULL
-		SELECT DISTINCT channelgrouping FROM analytics
+		SELECT * FROM analytics WHERE channelgrouping IS NOT NULL;
+		SELECT DISTINCT channelgrouping FROM analytics;
 
 	-- socialengagementtype - all present, but all 'not socially engaged' - very little analytical value here, ignore
 		SELECT * FROM analytics WHERE socialengagementtype IS NOT NULL

@@ -67,6 +67,8 @@
 		
 		-- the biggest problem here is that with sales_report_clean we have lots of ordered products but in all_sessions...
 		-- there is simply no authoritative indicator that this number of products were ordered. Only 81 transactions can be verified in all_sessions
+
+		-- we can use ecommerceaction_step 4 5 and 6 as proxies for purchasing
 		
 ----------
 ----------
@@ -74,9 +76,28 @@
 
 -- Question 3: Is there any pattern in the types (product categories) of products ordered from visitors in each city and country?
 
+		-- let's use the products_clean table and units ordered to see the most popular categories before introducing city/country
+		SELECT sesh.v2productcategory, COUNT(p.orderedquantity) AS number_of_orders
+		FROM products_clean p
+		JOIN all_sessions_clean sesh ON p.sku = sesh.product_sku
+		GROUP BY sesh.v2productcategory
+		ORDER BY COUNT(p.orderedquantity) DESC
+					-- mindful that this is the NUMBER OF ORDERS not number of products ordered 
+					-- YouTube very popular, men's T shirts specifically also very popular well above other categories
+
+		SELECT p.name, p.orderedquantity, sesh.v2productcategory
+		FROM products_clean p
+		JOIN all_sessions_clean sesh ON p.sku = sesh.product_sku
+		ORDER BY sesh.v2productcategory
+
+					-- there is a lot of ordered quantities with v2productcategory = '${escCatTitle}' that needs cleaning and (not set)
+				
+		-- now we'll try to add city, country and transactions
+			
 		SELECT 		city,
 					country,
-					v2productcategory
+					v2productcategory,
+					RANK () OVER( PARTITION BY city, country ORDER BY v2productcategory)
 		FROM all_sessions_clean 
 		WHERE transactions IS NOT NULL
 		group by v2productcategory
@@ -85,11 +106,21 @@
 		FROM all_sessions_clean
 		WHERE transactions IS NOT NULL
 		GROUP BY
+
+		
+
 ----------
 ----------
 ----------
 
 -- Question 4: What is the top-selling product from each city/country? Can we find any pattern worthy of noting in the products sold?
+
+		-- first let's find the top selling products
+		SELECT sesh.v2productname, COUNT(p.orderedquantity) AS number_of_orders
+		FROM products_clean p
+		JOIN all_sessions_clean sesh ON p.sku = sesh.product_sku
+		GROUP BY sesh.v2productcategory
+		ORDER BY COUNT(p.orderedquantity) DESC
 
 ----------
 ----------

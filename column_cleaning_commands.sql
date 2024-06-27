@@ -103,6 +103,10 @@
 			UPDATE all_sessions_clean
 				SET v2productcategory = REPLACE(v2productcategory, 'Brands/', '');
 
+	-- We also need to update the (not set) for the big hitters e.g. YouTube Decals, Google Kick Ball to improve the product category data
+
+			
+
 -- Cleaning of city and country. Maybe some cities and countries are erroneous? Remove the not set, not available etc...
 
 	SELECT DISTINCT country, city FROM all_sessions_clean
@@ -162,4 +166,3 @@
 		UPDATE analytics_clean
 			SET revenue = ROUND(revenue / 1000000, 2);
 
-			
