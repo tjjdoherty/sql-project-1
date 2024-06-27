@@ -122,14 +122,40 @@
 				ROUND(productprice / 1000000, 2)
 		FROM all_sessions_clean
 
-		SELECT * FROM all_sessions_clean
-		SELECT totaltransactionrevenue, productprice, productrevenue, transactionrevenue FROM all_sessions_clean
-
-		-- First let's alter the table for productprice from bigint to numeric. Others were done on import via CSV
+		SELECT totaltransactionrevenue, productprice, productrevenue, transactionrevenue FROM all_sessions_clean WHERE productrevenue IS NOT NULL
+		SELECT transactionrevenue FROM all_sessions_clean WHERE transactionrevenue IS NOT NULL
+		SELECT revenue, unit_price FROM analytics_clean WHERE revenue IS NOT NULL
+		
+		-- First let's alter the data type for productprice from bigint to numeric. Others were done on import via CSV
 		ALTER TABLE all_sessions_clean
 		ALTER COLUMN productprice TYPE NUMERIC(14,2)
 		USING productprice::NUMERIC;
 
+		-- Same with revenue in analytics table. It's currently VARCHAR so check no alphabetical characters
+		SELECT revenue FROM analytics_clean WHERE revenue ~ '[A-Za-z]'
+
+		-- change type to numeric
+		ALTER TABLE analytics_clean
+		ALTER COLUMN revenue TYPE NUMERIC(14,2)
+		USING revenue::NUMERIC;
+
 		-- Now update the columns,divide all not null by 1,000,000
-		-- UPDATE all_sessions_clean
-			-- SET productprice = ROUND(productprice / 1000000, 2)
+		UPDATE all_sessions_clean
+			SET productprice = ROUND(productprice / 1000000, 2);
+
+		UPDATE all_sessions_clean
+			SET transactionrevenue = ROUND(transactionrevenue / 1000000, 2);
+
+		UPDATE all_sessions_clean
+			SET productrevenue = ROUND(productrevenue / 1000000, 2);
+
+		UPDATE all_sessions_clean
+			SET totaltransactionrevenue = ROUND(totaltransactionrevenue / 1000000, 2);
+
+		UPDATE analytics_clean
+			SET unit_price = ROUND(unit_price / 1000000, 2);
+
+		UPDATE analytics_clean
+			SET revenue = ROUND(revenue / 1000000, 2);
+
+			
