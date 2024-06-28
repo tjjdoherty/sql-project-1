@@ -43,11 +43,19 @@
 	JOIN all_sessions sesh USING(visitid)
 	GROUP BY an.channelgrouping, v2productname
 
+	SELECT an.channelgrouping, COUNT(*) AS number_of_views
+	FROM analytics_clean an
+	JOIN all_sessions sesh USING(visitid)
+	GROUP BY an.channelgrouping
+	ORDER BY COUNT(*) DESC
+		
 	-- here we see the other channels that did not convert to transactions in all_sessions 
 			-- Affiliates, many pages viewed were Android, Google and YouTube products. They didn't convert, so their affiliate marketing schemes may want to be revised
 			-- The branded items feature heavily in general analytics
 			-- social seems to be a very very small channel, only six different products viewed via this channel
 
+	-- The second query above shows general site traffic by channel alone - lots of organic search and very little from social and affiliates.
+		
 		
 -- Q4 Stock ratio - ratio in sales_report is total_ordered divided by stocklevel. Which products and product categories have the highest ratio?
 
