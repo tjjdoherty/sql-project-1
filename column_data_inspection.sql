@@ -3,7 +3,7 @@
 
 -- all_sessions - this is an annual report from August 1 2016 to 2017, the 4th Quarter May-July 2017 is also covered by the analytics entity
 
-SELECT * FROM all_sessions -- 15134 rows
+	SELECT * FROM all_sessions -- 15134 rows
 
 	-- fullvisitorid - all present (all 15134 rows appear in the query)
 		SELECT * FROM all_sessions WHERE fullvisitorid IS NOT NULL
@@ -24,7 +24,7 @@ SELECT * FROM all_sessions -- 15134 rows
 			ORDER BY count(country) DESC
 
 			-- are the country (not set) records also city (not set) - yes they are
-			SELECT city, country FROM all_sessions WHERE country = '(not set)'
+				SELECT city, country FROM all_sessions WHERE country = '(not set)'
 	
 	-- city - all present, check for null-ish city entries
 		SELECT * FROM all_sessions
@@ -33,17 +33,17 @@ SELECT * FROM all_sessions -- 15134 rows
 		
 			-- (not set) appears again... San Francisco, SOUTH San Francisco (the same city?), 'not available in demo dataset' also appears
 		
-			SELECT city FROM all_sessions WHERE city IN ('not available in demo dataset', '(not set)')
+				SELECT city FROM all_sessions WHERE city IN ('not available in demo dataset', '(not set)')
 			-- 8656 entries, over half of the city data is not available...
 	
 			-- Let's group by to see if there's messy entries for cities e.g. typos, grammar
-			SELECT DISTINCT city, COUNT(city) FROM all_sessions -- 266 unique cities
-			GROUP BY city
-			ORDER BY COUNT(city) DESC
+				SELECT DISTINCT city, COUNT(city) FROM all_sessions -- 266 unique cities
+				GROUP BY city
+				ORDER BY COUNT(city) DESC
 			
 			-- Can the city column help us fill in a missing country column?
-			SELECT country, city FROM all_sessions
-			WHERE country = '(not set)'
+				SELECT country, city FROM all_sessions
+				WHERE country = '(not set)'
 
 	
 			-- CONCLUSION: we need this data because of its relevance to Q1 and other questions
@@ -52,9 +52,7 @@ SELECT * FROM all_sessions -- 15134 rows
 	-- totaltransactionrevenue - only 81 records with this present 
 		SELECT * FROM all_sessions WHERE totaltransactionrevenue IS NOT NULL
 	
-			-- CONCLUSION: we likely need this for its contribution to question 1 
-			-- but they are very large numbers describing items in the tens of dollar range. divide by 1,000,000 when calculating?
-
+			-- CONCLUSION: we need this for question 1 but they are very large numbers describing items in the tens of dollar range. divide by 1,000,000 when calculating?
 
 	-- transactions - only 81 non-null records appear and all are 1, very likely to be the same 81 from t.t.r above. every single one of 81 is '1' and the rest null
 		SELECT * FROM all_sessions WHERE transactions = '1'
@@ -65,7 +63,7 @@ SELECT * FROM all_sessions -- 15134 rows
 		SELECT * FROM all_sessions WHERE timeonsite IS NOT NULL
 	
 			-- is it seconds? MAX 4661, MIN 1, seems most sensible guess of the units
-			SELECT MAX(timeonsite) FROM all_sessions
+				SELECT MAX(timeonsite) FROM all_sessions
 
 	-- pageviews - all present
 		SELECT * FROM all_sessions WHERE pageviews IS NOT NULL
@@ -74,7 +72,7 @@ SELECT * FROM all_sessions -- 15134 rows
 		SELECT * FROM all_sessions WHERE sessionqualitydim 
 	
 			-- what is sessionqualitydim? 45 unique entries, unclear of its meaning
-			SELECT DISTINCT sessionqualitydim FROM all_sessions
+				SELECT DISTINCT sessionqualitydim FROM all_sessions
 			
 			-- CONCLUSION: junk feature, not enough context to see its meaning now
 
@@ -87,7 +85,7 @@ SELECT * FROM all_sessions -- 15134 rows
 		SELECT * FROM all_sessions WHERE visitid IS NOT NULL
 	
 			 -- 14556 DISTINCT visitid's - is this 14556 different visits to the website?
-			SELECT distinct visitid FROM all_sessions WHERE visitid IS NOT NULL
+				SELECT distinct visitid FROM all_sessions WHERE visitid IS NOT NULL
 
 	-- type - all present, either PAGE (14942) or EVENT (192) - maybe investigate further if more time what product 'events' are
 		SELECT type, COUNT(type) FROM all_sessions
@@ -106,8 +104,8 @@ SELECT * FROM all_sessions -- 15134 rows
 		SELECT * FROM all_sessions WHERE productrevenue IS NOT NULL
 	
 			-- why these four specifically? Spot check two of them to see if it has null and non-null productrevenue - they do
-			SELECT distinct(productrevenue), v2productname FROM all_sessions
-			WHERE v2productname IN ('Compact Bluetooth Speaker', 'Reusable Shopping Bag')
+				SELECT distinct(productrevenue), v2productname FROM all_sessions
+				WHERE v2productname IN ('Compact Bluetooth Speaker', 'Reusable Shopping Bag')
 			
 			-- CONCLUSION: there are four non-null productrevenue entries and those products have both null and non-null product revenues
 			-- this makes it a junk feature, I can't tell anything concrete even from the 4 non-nulls
@@ -116,10 +114,8 @@ SELECT * FROM all_sessions -- 15134 rows
 		SELECT * FROM all_sessions WHERE product_sku IS NOT NULL
 			-- How many distinct product_skus? 536 total here. most are 'GGOE...'' but some are '918...'' and others '10 ...' 
 			-- is there a special category of these 9s and 10s?
-			SELECT DISTINCT(product_sku) FROM all_sessions ORDER BY product_sku
+				SELECT DISTINCT(product_sku) FROM all_sessions ORDER BY product_sku
 	
-			-- CONCLUSION: Essential feature to uniquely identify and link foreign key to other entities
-
 	-- v2productname - all present But a this should match up with SKUs, one product, one product_sku. Let's investigate
 		SELECT * FROM all_sessions WHERE v2productname IS NOT NULL
 	
@@ -127,17 +123,17 @@ SELECT * FROM all_sessions -- 15134 rows
 			SELECT DISTINCT v2productname FROM all_sessions
 		
 			-- let's group them with SKUs and see duplicates - 124 products with multiple SKUs
-			SELECT v2productname, COUNT(DISTINCT product_sku) AS number_of_skus FROM all_sessions
-			GROUP BY v2productname
-			HAVING COUNT(DISTINCT product_sku) > 1
-			ORDER BY number_of_skus DESC
+				SELECT v2productname, COUNT(DISTINCT product_sku) AS number_of_skus FROM all_sessions
+				GROUP BY v2productname
+				HAVING COUNT(DISTINCT product_sku) > 1
+				ORDER BY number_of_skus DESC
 		
 			-- Spot check some of them to see a pattern in the dupes - many of the '918...' SKUs
-			SELECT v2productname, product_sku FROM all_sessions
-			WHERE v2productname IN ('Google Sunglasses', 'Google Men''s Long Sleeve Raglan Ocean Blue', 'Google Women''s V-Neck Tee Grey')
-			GROUP BY v2productname, product_sku
-
-			SELECT v2productname, productvariant FROM all_sessions WHERE productvariant IS NOT NULL AND productvariant != '(not set)'
+				SELECT v2productname, product_sku FROM all_sessions
+				WHERE v2productname IN ('Google Sunglasses', 'Google Men''s Long Sleeve Raglan Ocean Blue', 'Google Women''s V-Neck Tee Grey')
+				GROUP BY v2productname, product_sku
+	
+				SELECT v2productname, productvariant FROM all_sessions WHERE productvariant IS NOT NULL AND productvariant != '(not set)'
 	
 			-- CONCLUSION: important column that we must keep. But, there are a number of dupes and many of them have the uncommon numerical product_skus.
 			-- Ideally we would change these product_skus to the product's alphanumeric product_sku - one is likely the old SKU but its not clear which.
@@ -148,31 +144,31 @@ SELECT * FROM all_sessions -- 15134 rows
 		SELECT * FROM all_sessions WHERE v2productcategory IS NOT NULL
 	
 			-- how many categories? 74 appear from the below query, but it's messy and has lots of duplicates. COUNT queried to see the distribution
-			SELECT v2productcategory, COUNT(v2productcategory) FROM all_sessions
-			GROUP BY v2productcategory
-			ORDER BY COUNT(v2productcategory) DESC;
+				SELECT v2productcategory, COUNT(v2productcategory) FROM all_sessions
+				GROUP BY v2productcategory
+				ORDER BY COUNT(v2productcategory) DESC;
 
 			-- 757 entries with (not set) and 757 with ${escCatTitle} that could harm the orderedquantity downstream
-			SELECT DISTINCT(v2productcategory), COUNT(v2productcategory) FROM all_sessions
-			GROUP BY v2productcategory;
+				SELECT DISTINCT(v2productcategory), COUNT(v2productcategory) FROM all_sessions
+				GROUP BY v2productcategory;
 
 				-- which products are in here with these nullish categories, we can probably fill some of them in
-				SELECT DISTINCT v2productname, v2productcategory FROM all_sessions
-				WHERE v2productcategory IN ('(not set)', '${escCatTitle}');
+					SELECT DISTINCT v2productname, v2productcategory FROM all_sessions
+					WHERE v2productcategory IN ('(not set)', '${escCatTitle}');
 
 					-- i won't have time to change several hundred different entries, I will update the products with the largest orderedquantities
 					-- identified in the below query
-					SELECT DISTINCT(sesh.v2productname), SUM(p.orderedquantity)
-					FROM all_sessions sesh
-					JOIN products p ON sesh.product_sku = p.sku
-					WHERE sesh.v2productcategory IN ('(not set)', '${escCatTitle}')
-					GROUP BY DISTINCT(sesh.v2productname)
-					ORDER BY SUM(p.orderedquantity) DESC;
+						SELECT DISTINCT(sesh.v2productname), SUM(p.orderedquantity)
+						FROM all_sessions sesh
+						JOIN products p ON sesh.product_sku = p.sku
+						WHERE sesh.v2productcategory IN ('(not set)', '${escCatTitle}')
+						GROUP BY DISTINCT(sesh.v2productname)
+						ORDER BY SUM(p.orderedquantity) DESC;
 
 						-- previous query: let's find the correct categories for the most ordered items
-						SELECT DISTINCT v2productcategory, v2productname FROM all_sessions
-						WHERE v2productname IN ('Google Kick Ball', 'Google Sunglasses','YouTube Custom Decals', 'SPF-15 Slim & Slender Lip Balm', 'Nest® Cam Outdoor Security Camera - USA')
-						ORDER BY v2productname;
+							SELECT DISTINCT v2productcategory, v2productname FROM all_sessions
+							WHERE v2productname IN ('Google Kick Ball', 'Google Sunglasses','YouTube Custom Decals', 'SPF-15 Slim & Slender Lip Balm', 'Nest® Cam Outdoor Security Camera - USA')
+							ORDER BY v2productname;
 
 							-- there is some disagreement between the categories e.g. Google Kick Ball - some records Accessories, some Lifestyle. 
 							-- I'll make a call and put the null-ish entries in one existing category
@@ -220,9 +216,9 @@ SELECT * FROM all_sessions -- 15134 rows
 		SELECT transactionrevenue, totaltransactionrevenue FROM all_sessions WHERE transactionrevenue IS NOT NULL
 			
 			-- itemrevenue and transaction revenue both have the same 4 records, anything interesting?
-			SELECT productrevenue, transactionrevenue FROM all_sessions_clean
-			WHERE transactionrevenue IS NOT NULL
-			-- CONCLUSION: only 4 records appear and totaltransactionrevenue is the exact same values for all 4. this is just extraneous data to be deleted
+				SELECT productrevenue, transactionrevenue FROM all_sessions_clean
+				WHERE transactionrevenue IS NOT NULL
+				-- CONCLUSION: only 4 records appear and totaltransactionrevenue is the exact same values for all 4. this is just extraneous data to be deleted
 
 	-- transactionid - 9 distinct non-null rows, ignore for now
 		SELECT * FROM all_sessions WHERE transactionid IS NOT NULL
@@ -243,11 +239,11 @@ SELECT * FROM all_sessions -- 15134 rows
 	-- pagepathlevel1 - all present with some indicators of a checkout occurring
 		SELECT * FROM all_sessions WHERE pagepathlevel1 IS NOT NULL
 			-- on exploration most say google redesign, are they all like this? all but 816 are and they point to store, asearch...nothing interesting
-			SELECT * FROM all_sessions
-			WHERE pagepathlevel1 != '/google+redesign/'
+				SELECT * FROM all_sessions
+				WHERE pagepathlevel1 != '/google+redesign/'
 
 			-- from transactionrevenue earlier, pagepathlevel1 reveals order completed for 9 entries:
-			SELECT * FROM all_sessions WHERE pagepathlevel1 = '/ordercompleted.html'
+				SELECT * FROM all_sessions WHERE pagepathlevel1 = '/ordercompleted.html'
 			
 			-- CONCLUSION: keep for its ability to point out confirmed orders
 
@@ -255,15 +251,15 @@ SELECT * FROM all_sessions -- 15134 rows
 		SELECT * FROM all_sessions
 		WHERE ecommerceaction_type IS NOT NULL
 			-- these small integer values appear to represent stages in the checkout journey 0 - 6
-			SELECT DISTINCT ecommerceaction_type FROM all_sessions
+				SELECT DISTINCT ecommerceaction_type FROM all_sessions
 
 			-- see above - looks likely that ecommerceaction_type 6 means a checkout happened - just 9 fields
-			SELECT pagepathlevel1, pagetitle FROM all_sessions WHERE ecommerceaction_type = 6; -- all have pagetitle = checkout confirmation
-			SELECT pagepathlevel1, pagetitle FROM all_sessions WHERE ecommerceaction_type = 5; -- 31 records, Checkout review/Your Info / Payment Method
-			SELECT pagepathlevel1, pagetitle FROM all_sessions WHERE ecommerceaction_type = 4; -- 1 record, pagepath is /basket, Pagetitle is Shopping Cart
-			SELECT pagepathlevel1, pagetitle FROM all_sessions WHERE ecommerceaction_type = 3; -- 37 records record, pagepath is google+redesign (not useful), pagetitle is product name
-			SELECT pagepathlevel1, pagetitle FROM all_sessions WHERE ecommerceaction_type = 2; -- 137 records, same as _type 3 above, search results and looking at products
-			SELECT pagepathlevel1, pagetitle FROM all_sessions WHERE ecommerceaction_type = 1; -- 134 records, same as above
+				SELECT pagepathlevel1, pagetitle FROM all_sessions WHERE ecommerceaction_type = 6; -- all have pagetitle = checkout confirmation
+				SELECT pagepathlevel1, pagetitle FROM all_sessions WHERE ecommerceaction_type = 5; -- 31 records, Checkout review/Your Info / Payment Method
+				SELECT pagepathlevel1, pagetitle FROM all_sessions WHERE ecommerceaction_type = 4; -- 1 record, pagepath is /basket, Pagetitle is Shopping Cart
+				SELECT pagepathlevel1, pagetitle FROM all_sessions WHERE ecommerceaction_type = 3; -- 37 records record, pagepath is google+redesign (not useful), pagetitle is product name
+				SELECT pagepathlevel1, pagetitle FROM all_sessions WHERE ecommerceaction_type = 2; -- 137 records, same as _type 3 above, search results and looking at products
+				SELECT pagepathlevel1, pagetitle FROM all_sessions WHERE ecommerceaction_type = 1; -- 134 records, same as above
 
 			-- CONCLUSION: this is useful because I can see people going to search, stages of the checkout process AND confirmed purchases with _type 6
 	
@@ -333,9 +329,9 @@ SELECT * FROM analytics
 
 	-- units_sold - 95147 records, 135 uniques including -89 in one record and 98 in another. This should be a smallint (change in other file)
 		-- this way we can perform calculations e.g. sum of units_sold for a product_sku
-		SELECT * FROM analytics WHERE units_sold IS NOT NULL
-		SELECT DISTINCT units_sold FROM analytics
-		SELECT MAX(units_sold) FROM analytics 
+			SELECT * FROM analytics WHERE units_sold IS NOT NULL
+			SELECT DISTINCT units_sold FROM analytics
+			SELECT MAX(units_sold) FROM analytics 
 
 	-- pageviews - 72 nulls - steady small int range of values almost all present, keep but low priority
 		SELECT * FROM analytics WHERE pageviews IS NOT NULL;
@@ -358,7 +354,7 @@ SELECT * FROM analytics
 			
 			-- this is mostly null but there are almost 80,000 records with a non-null unit_price and units_sold which very closely resembles revenue when multiplied
 			-- this is investigated in final conclusions at bottom of this file.
-			-- NOTE: It's likely i have multiplied and filled in duplicate rows which has compromised the revenue column.
+			-- NOTE: It's likely I have multiplied and filled in duplicate rows which has compromised the revenue column.
 
 	-- unitprice - all present
 		SELECT * FROM analytics WHERE unit_price IS NOT NULL
@@ -474,9 +470,21 @@ SELECT * FROM products
 ---
 ---
 			
--- FINAL CONCLUSIONS OF THE DATA INSPECTION:
+-- FINAL CONCLUSIONS OF THE DATA INSPECTION and Transformation:
 
--- entities: 
+	-- General Comments: 
+		-- The business questions asked are about transaction revenues and confirmed orders, but aside from 81 'transactions' in all_sessions
+		-- there remains no clear way to see how 81 transactions leads to tens of thousands of ordered products from the products table
+		-- my main attempt to find the other transaction revenues was from units_sold and unit_price in the analytics entity
+		-- but it's likely I have populated duplicate rows and compromised that column and I did not factor it into my "Starting with Questions" section
+
+		-- Data cleaning included trimming whitespaces from product names and adding product variants (e.g. color sunglasses, size to apparel names)
+		-- which removed ambiguity about the same product e.g. "Sunglasses" having multiple SKUs - it's different color items.
+		
+			-- all transaction and money-related columns were all divided by 1,000,000 as well
+
+			
+-- Entities: 
 			
 -- sales_by_sku is extraneous data with the exception of 8 SKUs that account for only 5 individual item orders everything else it offers is accessed by sales_report
 
@@ -486,17 +494,16 @@ SELECT * FROM products
 	-- all_sessions can be joined to analytics via the visitid column.
 
 
-
 			
 -- analytics has units_sold and fullvisitorid, which we could join with all_sessions to identify where things have been bought
 
-	-- NOTE: There is a chance that the operation done to the revenue column in analytics_clean is with duplicate rows, so I am not touching it for now.
+	-- NOTE: There is a chance that the operation done to the revenue column in analytics_clean is with duplicate rows, it should be ignored for now.
 				
 	-- There appears to be a link between unit_price, units_sold and multiplied to get revenue
-	SELECT visitid, unit_price, units_sold, revenue FROM analytics_clean WHERE revenue IS NOT NULL
-
-	SELECT visitid, units_sold, revenue, unit_price, (unit_price * units_sold) AS total_price
-	FROM analytics_clean WHERE units_sold IS NOT NULL AND unit_price IS NOT NULL AND revenue IS NULL
+		SELECT visitid, unit_price, units_sold, revenue FROM analytics_clean WHERE revenue IS NOT NULL
+	
+		SELECT visitid, units_sold, ROUND((revenue::numeric / 1000000), 2) AS revenue, ROUND((unit_price / 1000000), 2) AS unit_price, ROUND(((unit_price * units_sold) / 1000000), 2) AS total_price
+		FROM analytics WHERE units_sold IS NOT NULL AND unit_price IS NOT NULL AND revenue IS NOT NULL
 
 		-- in the above query total_price column is a VERY close match to the revenue column when it's not null, when it's null we could complete 80,000 new records
 		-- There's a few dollars added to revenue though - maybe a delivery, service fee or tax?
@@ -548,12 +555,6 @@ SELECT * FROM products
 				WHERE units_sold IS NOT NULL
 				GROUP BY visitid
 
-				SELECT visitid, totaltransactionrevenue, revenue, units_sold
-				FROM all_sessions_clean 
-				JOIN analytics_clean USING(visitid)
-				WHERE totaltransactionrevenue IS NOT NULL and visitid = '1493668365'
-				ORDER BY visitid
-
 			-- this below query has around 160 entries and most have nothing in transactions where the visitid shows something was sold!
 			SELECT DISTINCT(visitid), sesh.country, sesh.v2productname, an.unit_price, an.units_sold, an.revenue, totaltransactionrevenue, transactions
 			FROM analytics_clean an
@@ -577,10 +578,8 @@ SELECT * FROM products
 				-- and tackle the city/country transaction questions being asked.
 			
 
-
 -- products table has the more comprehensive orderedquantity data than sales_report which appears to be a quarterly report
 	-- however the product names are more descriptive in all_sessions, so products will be used for the ordered quantities
-
 
 -- Business Questions: 
 
@@ -589,5 +588,3 @@ SELECT * FROM products
 -- units_sold from the analytics entity should be converted to a small_int and this is a useful measure of orders, linking fullvisitorid
 	-- multiply unit_price and units_sold to fill empty revenue columns in analytics entity, join it to all_sessions country and city data
 	-- (we could group units_sold by fullvisitorid and their country)
-
--- Trimming of the product name is a simple effective clean up, adding the size/colours from product variant in order to remove that column which is almost empty

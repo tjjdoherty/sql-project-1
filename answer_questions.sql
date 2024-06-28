@@ -2,7 +2,7 @@
 
 -- Question 1: Which cities and countries have the highest level of transaction revenues on the site?
 
-	-- make a summary table? fullvisitorid, city, country, totaltransactionrevenue
+	-- which column should we use to determine if a transaction took place?
 
 	SELECT * FROM all_sessions_clean WHERE totaltransactionrevenue IS NOT NULL -- 81 fields indicating a transaction took place
 	SELECT * FROM all_sessions_clean WHERE transactionid IS NOT NULL -- 9 fields indicating a transaction took place
@@ -27,7 +27,7 @@
 
 		-- IF MORE TIME: can we get more data with the pagetitle or ecommerceaction_step?
 		SELECT totaltransactionrevenue, pagetitle, country FROM all_sessions_clean WHERE ecommerceaction_type = 5; 
-			-- Above: Users are on Payment Method & Review, ASSUME THEY CONFIRMED?
+			-- Above: Users are on Payment Method & Review, ASSUME they confirmed their order and purchased?
 
 
 -- Question 2: What is the average number of products ordered from visitors in each city and country?
@@ -61,8 +61,9 @@
 	
 
 		-- both tables agree the average products ordered is highest in Seattle USA and Sydney Australia followed by Houston, Nashville, Palo Alto for the top 5.
+		-- although sales_report has less records
 
-		-- I am concerned that transaction from Israel doesn't appear in the above query. Why not?
+		-- The transaction from Israel doesn't appear in the above query. Why not? Is there other data missing?
 				SELECT * FROM all_sessions_clean WHERE product_sku = 'GGOENEBB079399'
 				SELECT * FROM sales_report_clean WHERE product_sku = 'GGOENEBB079399'
 				SELECT * FROM products_clean WHERE sku = 'GGOENEBB079399'
@@ -73,7 +74,7 @@
 			
 			-- the biggest problem here is that with products_clean we have lots of ordered products but in all_sessions...
 			-- there is simply no authoritative indicator that this number of products were ordered. Only 81 transactions can be verified in all_sessions
-			-- hence i tried to calculate revenues from units_sold in analytics
+			-- hence i tried to calculate revenues from units_sold * unit_price in analytics
 	
 			-- we can use ecommerceaction_step 5 as proxies for purchasing - it represents the Checkout Review/Payment Method screens, we could assume they complete checkout
 		
