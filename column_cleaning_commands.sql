@@ -7,6 +7,9 @@
 
 	SELECT * FROM analytics WHERE socialengagementtype = 'Not Socially Engaged'
 
+-- I need to convert visitid to bigint in both analytics_clean and all_sessions_clean to join them
+	ALTER TABLE analytics_clean ALTER COLUMN visitid TYPE bigint USING visitid::bigint;
+		
 -- name the columns in lower case to make querying easier.
 
 	ALTER TABLE products RENAME COLUMN "SKU" TO sku;
@@ -72,9 +75,7 @@
 	SELECT DISTINCT(v2productcategory) FROM all_sessions_clean
 
 	-- trim Home/ from v2 product category, as it is the top level domain of the website, not much analytical value
-	
-		-- over 14300 records of 15000 total have 'Home/' in them so this will help us differentiate record.
-		-- check the query works with a SELECT statement first
+			-- check the query works with a SELECT statement first
 			SELECT	v2productcategory,
 					REPLACE(v2productcategory, 'Home/', '')
 			FROM all_sessions_clean
@@ -184,3 +185,17 @@
 		UPDATE analytics_clean
 			SET revenue = ROUND(revenue / 1000000, 2);
 
+-- in the analytics_clean table, add the multiplication of unit_cost and units_sold for revenue
+
+		SELECT visitid, revenue, unit_price, units_sold
+		FROM analytics_clean
+		WHERE revenue IS NULL AND units_sold IS NOT NULL AND unit_price IS NOT NULL
+
+		UPDATE analytics_clean
+		SET revenue = unit_price * units_sold
+		WHERE revenue IS NULL AND units_sold IS NOT NULL AND unit_price IS NOT NULL;
+		
+	-- NOTE: I made this change as it appeared that a non-zero units_sold record in analytics indicated that a transaction took place
+	-- It was hoped this, multiplied by unit_price would fill in significantly more transaction revenue records which were incomplete, but evidenced by units_sold not being null
+	-- this last change may have compromised the revenue column because there could be duplicate entries in the analytics table
+	-- had i had enough time, I would re-set the analytics table and clean it again without doing this.

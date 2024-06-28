@@ -48,7 +48,6 @@ SELECT * FROM all_sessions -- 15134 rows
 	
 			-- CONCLUSION: we need this data because of its relevance to Q1 and other questions
 			
-
 	
 	-- totaltransactionrevenue - only 81 records with this present 
 		SELECT * FROM all_sessions WHERE totaltransactionrevenue IS NOT NULL
@@ -195,8 +194,8 @@ SELECT * FROM all_sessions -- 15134 rows
 							FROM all_sessions
 							WHERE v2productname = 'YouTube Custom Decals';
 
-			-- CONCLUSION: important for the questions in the project and will be used, and needs cleaning (not set) and ${escCatTitle} for ordered quantity
-			-- Some trimming e.g. LTRIM "Home/" or trim to the last subdomain if we have time would be good
+		-- CONCLUSION: important for the questions in the project and will be used, and needs cleaning (not set) and ${escCatTitle} for ordered quantity
+		-- Some trimming e.g. LTRIM "Home/" or trim to the last subdomain if we have time would be good
 
 	-- productvariant - all present but 15094 of them are (not set) and the remaining are various size descriptions
 		SELECT * FROM all_sessions WHERE productvariant != '(not set)'
@@ -286,11 +285,13 @@ SELECT * FROM all_sessions -- 15134 rows
 			WHERE ecommerceaction_option IS NOT NULL
 			ORDER BY ecommerceaction_option			
 
-			-- CONCLUSION: These three ecommerceaction columns at the end may be the most comprehensive way to tell if an order has taken place.
-			-- it appears that ecommerceaction_steps 1, 2 and 3 are billing/shipping, payment and review respectively and could be matched elsewhere.
-			-- it doesn't appear to show that the order is complete, only Review which is seen in pagetitle and pagepathlevel1
-			-- therefore there's still a chance that the user has abandoned the cart.
+		-- CONCLUSION: 
+		-- These three ecommerceaction columns may be the most comprehensive way to tell if an order has taken place.
+		-- ecommerceaction_steps 1, 2 and 3 are billing/shipping, payment and review respectively and could be matched elsewhere.
+		-- it doesn't appear to show that the order is complete, only Review which is seen in pagetitle and pagepathlevel1
+		-- so we'd still have to make an assumption
 
+			
 				
 -- analytics - 4,301,122 records (all present) and it is likely a quarterly report, given the 3 month date window May 1 - Aug 1, 2017
 
@@ -305,7 +306,6 @@ SELECT * FROM analytics
 		SELECT DISTINCT visitid FROM analytics
 		SELECT visitid, visitstarttime FROM analytics WHERE visitid = visitstarttime
 		SELECT * FROM analytics WHERE visitid = visitstarttime
-
 
 	-- visitstarttime - all present, 148853 uniques but ignore, see visitid above
 		SELECT * FROM analytics WHERE visitstarttime IS NOT NULL
@@ -350,12 +350,15 @@ SELECT * FROM analytics
 		SELECT * FROM analytics WHERE bounces IS NOT NULL
 		SELECT DISTINCT bounces FROM analytics
 
-
 	-- revenue - 15355 records present - entirely numerical, should be numeric and divided by 1m like other money columns
 			-- every single revenue non-null record has units_sold
 		SELECT * FROM analytics WHERE revenue IS NOT NULL
 		SELECT * FROM analytics WHERE revenue IS NOT NULL AND units_sold IS NOT NULL
 		SELECT revenue FROM analytics WHERE revenue ~ '^[0-9]+' 
+			
+			-- this is mostly null but there are almost 80,000 records with a non-null unit_price and units_sold which very closely resembles revenue when multiplied
+			-- this is investigated in final conclusions at bottom of this file.
+			-- NOTE: It's likely i have multiplied and filled in duplicate rows which has compromised the revenue column.
 
 	-- unitprice - all present
 		SELECT * FROM analytics WHERE unit_price IS NOT NULL
@@ -423,7 +426,7 @@ SELECT * FROM products
 
 -- sales_report - 454 entries. This information agrees with sales_by_sku so we can just ignore sales_by_sku, it is duplicate information entirely
 
-SELECT * FROM sales_report
+	SELECT * FROM sales_report
 
 	-- product_sku all 454 unique, primary key. All 454 Match a record in sales_by_sku, but there are 8 missing.
 		SELECT sr.product_sku, sk.product_sku FROM sales_report sr
@@ -467,28 +470,40 @@ SELECT * FROM sales_report
 		-- above query confirms that the SKUs match, the brand e.g. Google Rucksack does not appear in the products table, only 'Rucksack' will appear.
 		-- we don't need to change the name in products table, but it would be more descriptive in reports to use the product name and category from all_sessions
 
-
--- FINAL CONCLUSIONS OF THE DATA INSPECTION
+---
+---
+---
+			
+-- FINAL CONCLUSIONS OF THE DATA INSPECTION:
 
 -- entities: 
+			
 -- sales_by_sku is extraneous data with the exception of 8 SKUs that account for only 5 individual item orders everything else it offers is accessed by sales_report
--- all_sessions has more descriptive names for the products with the brands included in the name and should be used instead of the names in the products table. it also has the product categories.
--- products table has the more comprehensive orderedquantity data than sales_report which appears to be a quarterly report
 
+-- all_sessions has more descriptive names for the products with the brands included in the name and should be used instead of the names in products table. 
+	-- it also has the product categories and user's country/city, but it seems incomplete with transactions or transactionrevenue.
+	-- this data is more complete in the analytics entity with tens of thousands of units_sold records, along with unit_cost to complete the revenue columns
+	-- all_sessions can be joined to analytics via the visitid column.
+
+
+
+			
 -- analytics has units_sold and fullvisitorid, which we could join with all_sessions to identify where things have been bought
-	
+
+	-- NOTE: There is a chance that the operation done to the revenue column in analytics_clean is with duplicate rows, so I am not touching it for now.
+				
 	-- There appears to be a link between unit_price, units_sold and multiplied to get revenue
 	SELECT visitid, unit_price, units_sold, revenue FROM analytics_clean WHERE revenue IS NOT NULL
 
 	SELECT visitid, units_sold, revenue, unit_price, (unit_price * units_sold) AS total_price
-	FROM analytics_clean WHERE units_sold > 1 AND revenue IS NULL
+	FROM analytics_clean WHERE units_sold IS NOT NULL AND unit_price IS NOT NULL AND revenue IS NULL
 
-		-- in the above query total_price column is a VERY close match to the revenue column when it's not null, when it's null we could complete 20,000 new records
+		-- in the above query total_price column is a VERY close match to the revenue column when it's not null, when it's null we could complete 80,000 new records
 		-- There's a few dollars added to revenue though - maybe a delivery, service fee or tax?
 		
 		-- the below query shows that there is a small additional amount to revenue after multiplying unit_cost by units_sold
 		-- from spot checking, it looks far more likely to be a flat $2.50 fee to a $13.59 order rather than an 18% tax on $13.59
-		-- being able to use unit_cost * units_sold to complete the revenue column seems quite sensible and would add enormous analytical value
+		-- it's not perfect because the extra fee is not exactly clear but it solves a huge amount of revenue data missing
 		-- I will be making this change in analytics_clean for question 5
 	
 			SELECT 
@@ -501,14 +516,78 @@ SELECT * FROM sales_report
 					ROUND(revenue - (unit_price * units_sold), 2) AS flat_extra_fee
 			FROM analytics_clean
 			WHERE revenue IS NOT NULL 
+
+	
+		-- i now need to sum the revenue for each non-zero units_sold record in analytics, and reconcile it against totaltransactionrevenue in all_sessions
+		-- it will not be exact because of the small fee we didn't work out, but it should be close
+				
+			-- start with every record with a unit sold, 95000 records
+			SELECT * FROM analytics_clean WHERE revenue IS NOT NULL;
+			SELECT * FROM all_sessions_clean WHERE totaltransactionrevenue IS NOT NULL
+
+			-- due to the units_sold and unit_price multiplication earlier, the columns of interest are SUM(revenue), grouped by visitid where units_sold is not null
+
+				SELECT visitid, SUM(revenue) AS my_transaction_rev
+				FROM analytics_clean
+				WHERE units_sold IS NOT NULL
+				GROUP BY visitid
+
+				SELECT visitid, revenue
+				FROM analytics_clean
+				WHERE units_sold IS NOT NULL
+				ORDER BY visitid
+
+				-- the above query is my calculation of the total transaction revenue 
+				-- which should be reconciled against the 81 existing records that were there in the raw all_sessions file
+
+				SELECT 	visitid, 
+						SUM(revenue) AS my_transaction_rev,
+						totaltransactionrevenue
+				FROM analytics_clean an
+				LEFT OUTER JOIN all_sessions_clean sesh USING(visitid)
+				WHERE units_sold IS NOT NULL
+				GROUP BY visitid
+
+				SELECT visitid, totaltransactionrevenue, revenue, units_sold
+				FROM all_sessions_clean 
+				JOIN analytics_clean USING(visitid)
+				WHERE totaltransactionrevenue IS NOT NULL and visitid = '1493668365'
+				ORDER BY visitid
+
+			-- this below query has around 160 entries and most have nothing in transactions where the visitid shows something was sold!
+			SELECT DISTINCT(visitid), sesh.country, sesh.v2productname, an.unit_price, an.units_sold, an.revenue, totaltransactionrevenue, transactions
+			FROM analytics_clean an
+			JOIN all_sessions_clean sesh USING(visitid)
+			WHERE units_sold IS NOT NULL
+			ORDER BY visitid
+
+			-- We want to QA and ensure that each visitid represents a single user (distinct fullvisitorid should be 1)
+			SELECT DISTINCT(visitid), COUNT(DISTINCT fullvisitorid) FROM analytics_clean
+			GROUP BY visitid
+				
+				-- 148642 records of unique visitids with the number of fullvisitorids they correspond to.
+				-- below ensure there's no multiple fullvisitorids
+				
+				SELECT DISTINCT(visitid), COUNT(DISTINCT fullvisitorid) FROM analytics_clean
+				GROUP BY visitid
+				HAVING COUNT(DISTINCT fullvisitorid) > 1
+			
+				-- unfortunately there are 1727 records with more than one visitorid which seems like bad data. but this is 1.1% of the data total. 
+				-- We have to take this visitid link to bridge units_sold and revenue data from analytics into the all_sessions table to add transaction revenues
+				-- and tackle the city/country transaction questions being asked.
 			
 
 
--- Questions: 
--- They revolve around the city and country data which is accessed by all_sessions, 
--- these would join to a product SKU which is accessible in sales_report
+-- products table has the more comprehensive orderedquantity data than sales_report which appears to be a quarterly report
+	-- however the product names are more descriptive in all_sessions, so products will be used for the ordered quantities
 
--- units_sold should be converted to a small_int and this is a useful measure of orders, linking fullvisitorid 
+
+-- Business Questions: 
+
+-- They revolve around the city and country data which is accessed by all_sessions, these would join to a product SKU which is accessible in products,
+
+-- units_sold from the analytics entity should be converted to a small_int and this is a useful measure of orders, linking fullvisitorid
+	-- multiply unit_price and units_sold to fill empty revenue columns in analytics entity, join it to all_sessions country and city data
 	-- (we could group units_sold by fullvisitorid and their country)
 
 -- Trimming of the product name is a simple effective clean up, adding the size/colours from product variant in order to remove that column which is almost empty
