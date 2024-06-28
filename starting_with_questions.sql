@@ -24,6 +24,50 @@
 		-- Sunnyvale, Atlanta, Palo Alto, New York are all in the top 10, Tel-Aviv Israel is the only non-US in top 10.
 		-- However nearly half of the revenue ($6,092 out of over $14,000) in this report does not have city data available, though it is in the USA.
 
+		-- below I am going to group the cities into Sales Regions which makes for more meaningful distinctions
+
+		SELECT 	city,
+				CASE
+					WHEN city in ('Los Angeles', 'San Francisco', 'Sunnyvale', 'San Bruno', 'Palo Alto', 'Mountain View', 'San Jose', 'Seattle') THEN 'US West'
+					WHEN city in ('New York', 'Boston', 'Atlanta', 'Miami') THEN 'US East'
+					WHEN city in ('Austin', 'Nashville', 'Columbus', 'Houston', 'Chicago') THEN 'US Central'
+					WHEN country != 'United States' THEN 'International'
+					WHEN country = 'United States' THEN 'US'
+					ELSE 'Unknown'
+				END AS sales_region,
+				SUM(totaltransactionrevenue) AS total_transaction_revenue
+		FROM all_sessions_clean
+		WHERE totaltransactionrevenue IS NOT NULL
+		GROUP BY country, city
+		ORDER BY SUM(totaltransactionrevenue) DESC;
+					
+		-- And grouping by these sales regions:
+
+		WITH sales_regions_breakdown AS (
+			SELECT 	city,
+					CASE
+						WHEN city in ('Los Angeles', 'San Francisco', 'Sunnyvale', 'San Bruno', 'Palo Alto', 'Mountain View', 'San Jose', 'Seattle') THEN 'US West'
+						WHEN city in ('New York', 'Boston', 'Atlanta', 'Miami') THEN 'US East'
+						WHEN city in ('Austin', 'Nashville', 'Columbus', 'Houston', 'Chicago') THEN 'US Central'
+						WHEN country != 'United States' THEN 'International'
+						WHEN country = 'United States' THEN 'US'
+						ELSE 'Unknown'
+					END AS sales_region,
+					SUM(totaltransactionrevenue) AS total_transaction_revenue
+			FROM all_sessions_clean
+			WHERE totaltransactionrevenue IS NOT NULL
+			GROUP BY country, city
+			ORDER BY SUM(totaltransactionrevenue) DESC
+			) 
+
+		SELECT sales_region, SUM(total_transaction_revenue)
+		FROM sales_regions_breakdown
+		GROUP BY sales_region
+		ORDER BY SUM(total_transaction_revenue) DESC;
+
+			-- We now have a bit more meaningful information that the US West is driving a lot more transaction revenue than the East, which is more than the Central region
+			-- the general 'US' is a catch-all which is populated by records where city data is not available, but the country is the United States
+
 
 		-- IF MORE TIME: can we get more data with the pagetitle or ecommerceaction_step?
 		SELECT totaltransactionrevenue, pagetitle, country FROM all_sessions_clean WHERE ecommerceaction_type = 5; 
