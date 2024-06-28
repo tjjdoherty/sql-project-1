@@ -1,17 +1,18 @@
 # Final-Project-Transforming-and-Analyzing-Data-with-SQL
 
 ## Project/Goals
-(fill in your description and goals here)
+There were several business questions to answer based on the five data tables available. These were based on revenue generated from transactions, where customers were purchasing from, what they were purchasing and patterns therein. The data was a mix of an annual record of user sessions, sales reports, a very large repository of web analytics and a products table.
 
 ## Process
-### (your step 1)
-### (your step 2)
+### I set out to find where the information was and found a mix of features across the columns, including ordered quantities in products, a boolean column of transactions taking place, transaction revenues, product names and categories and some other features.
+### There was a lot of cleaning of product names, categories and indicators of a transaction taking place. There were several columns which were entirely null which were dropped, and I tried to work with the large messy analytics table to identify where products had been sold and not logged as a transaction.
 
 ## Results
-(fill in what you discovered this data could tell you and how you used the data to answer those questions)
+I was able to The vast majority of confirmed transactions were based in the US in major metropolitan areas like San Francisco, Palo Alto and New York. I found some patterns into popular products, some seasonality in their purchase and marketing channels through which purchases were made and channels that were less successful.
 
 ## Challenges 
-(discuss challenges you faced in the project)
+The most serious challenge was the sheer lack of confirmed transactions and the difficulty in bridging the gap between confirmed transaction revenue and the number of products ordered. There were 81 confirmed transactions in over 15000 'user sessions' so attempts were made to identify where units had been sold and thus revenue had been generated from the web analytics data. There was data on the web page being viewed in the checkout process, where we could make an assumption at checkout review that a user would confirm and not abandon the cart. 
+Ultimately, the products table indicates that tens of thousands of products have been sold but the confirmed transactions accounted for only around $14,000.
 
 ## Future Goals
-(what would you do if you had more time?)
+I would like to dig further into the web analytics data which seems the most likely place to identify instances were products were sold without being logged as transaction revenue in a user session. However, it is a very messy data set with over 4.3 million records compared to the 15,000 user sessions. It would need combing through for duplicate data before identifying recorded sales.
