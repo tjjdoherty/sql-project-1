@@ -199,3 +199,14 @@
 	-- It was hoped this, multiplied by unit_price would fill in significantly more transaction revenue records which were incomplete, but evidenced by units_sold not being null
 	-- this last change may have compromised the revenue column because there could be duplicate entries in the analytics table
 	-- had i had enough time, I would re-set the analytics table and clean it again without doing this.
+
+
+-- Finally, add primary keys to the clean entities to link together. Products primary key sku is linked to sales_report
+
+SELECT * FROM all_sessions_clean
+
+SELECT * FROM sales_report_clean
+	
+ALTER TABLE products_clean ADD CONSTRAINT sku_primary PRIMARY KEY (sku);
+
+ALTER TABLE sales_report ADD CONSTRAINT sku_foreign FOREIGN KEY (product_sku) REFERENCES products_clean (sku);
