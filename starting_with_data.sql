@@ -21,7 +21,7 @@
 -- Q2 Analytics of channelgrouping - look at the visitid and channelgrouping, is there anything interesting about the products bought from different channels?
 
 	SELECT * FROM analytics_clean -- want to grab visitid, date, channelgrouping
-	SELECT * FROM all_sessions -- visitid join, v2productcategory
+	SELECT * FROM all_sessions_clean -- visitid join, v2productcategory
 	
 	SELECT DISTINCT channelgrouping FROM analytics_clean -- Channels are: affiliates, Direct, Display, Organic Search, Paid Search, Referral, Social
 
@@ -55,7 +55,7 @@
 		
 	SELECT DISTINCT(v2productname), v2productcategory, ratio 
 	FROM sales_report_clean sr
-	JOIN all_sessions sesh USING(Product_sku)
+	JOIN all_sessions_clean sesh USING(Product_sku)
 	WHERE stocklevel > 0 AND total_ordered > 0
 	ORDER BY ratio DESC
 
