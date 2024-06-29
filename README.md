@@ -1,7 +1,7 @@
 # Final-Project-Transforming-and-Analyzing-Data-with-SQL
 
 ## Project/Goals
-There were several business questions to answer based on the five data tables available. These were based on revenue generated from transactions, where customers were purchasing from, what they were purchasing and patterns therein. The data was a mix of an annual record of user sessions, sales reports, a very large repository of web analytics and a products table.
+five data tables were provided related to an ecommerce website, with business questions asked that required exploration of the tables to answer. These questions were based on revenue generated from transactions, where customers were purchasing from, what they were purchasing and patterns therein. The data was a mix of an annual record of user sessions, sales reports, a very large repository of web analytics and a products table.
 
 ## Process
 ### I set out to find where the information was and found a mix of features across the columns, including ordered quantities in products, a boolean column of transactions taking place, transaction revenues, product names and categories and some other features.
