@@ -10,13 +10,13 @@ Another issue is the readability of transaction revenue features, which are all 
 
 
 # Queries:
-##Below, provide the SQL queries you used to clean your data.
+## Below, provide the SQL queries you used to clean your data.
 
 You can refer to column_cleaning_commands.sql for the entire log of cleanup queries to the raw files which I applied to copy tables (products_clean, all_sessions_clean).
 
 Some examples of the SQL queries to concatenate product name and variant:
 
-  UPDATE all_sessions_clean 
+  > UPDATE all_sessions_clean 
 		SET v2productname = CASE
 								WHEN productvariant = '(not set)' THEN v2productname
 								ELSE v2productname || ' ' || productvariant
