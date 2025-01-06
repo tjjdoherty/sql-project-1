@@ -1,4 +1,4 @@
-What issues will you address by cleaning the data?
+# What issues will you address by cleaning the data?
 
 Data cleaning initially was about identifying which features were important to the questions, which features could be used to infer more important information, and which features were not useful. I made minimal changes to the raw files (changing some data types after importing via csv) such as altering the date column to be date type. Otherwise, I created copy tables for my data cleaning and manipulation.
 
@@ -9,8 +9,8 @@ With the limited transaction data, getting the confirmed transactions was vital.
 Another issue is the readability of transaction revenue features, which are all very large numbers that do not make sense with the ticket size (e.g. a backpack for 69000000 USD). Spot checking these, it because clear that dividing by 1,000,000 was appropriate.
 
 
-Queries:
-Below, provide the SQL queries you used to clean your data.
+# Queries:
+##Below, provide the SQL queries you used to clean your data.
 
 You can refer to column_cleaning_commands.sql for the entire log of cleanup queries to the raw files which I applied to copy tables (products_clean, all_sessions_clean).
 
