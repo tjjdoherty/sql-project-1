@@ -24,28 +24,28 @@ Some examples of the SQL queries to concatenate product name and variant:
 
 Below is replacing double whitespaces with Regex:
 
-  SELECT v2productname, REGEXP_REPLACE(v2productname, '\s{2,}', ' ', 'g') 
+  > SELECT v2productname, REGEXP_REPLACE(v2productname, '\s{2,}', ' ', 'g') 
 		FROM all_sessions_clean
 		WHERE v2productname LIKE '%  %'
 
 Removing extraneous top domains of the product category (which appears to be abstracted from the website URL):
 
-  SELECT DISTINCT v2productcategory,
+  > SELECT DISTINCT v2productcategory,
 						REPLACE(v2productcategory, 'Shop by Brand/', ''),
 						REPLACE(v2productcategory, 'Brands/', '')
 
 Updating known product categories to remove some null-ish entries of popular database records:
 
-  UPDATE all_sessions_clean
+  > UPDATE all_sessions_clean
 		SET v2productcategory = REPLACE(REPLACE(v2productcategory, '(not set)', 'Accessories/Sports & Fitness'), '${escCatTitle}', 'Accessories/Sports & Fitness')
 		WHERE v2productname = 'Google Kick Ball';
 
 Identifying erroneous countries based on city data:
 
-  SELECT country, city FROM all_sessions_clean
+  > SELECT country, city FROM all_sessions_clean
 		WHERE city IN ('Mountain View', 'San Francisco', 'New York', 'Los Angeles') AND country != 'United States'
 
 Example of updating the total transaction revenue:
 
-  UPDATE all_sessions_clean
+  > UPDATE all_sessions_clean
 			SET totaltransactionrevenue = ROUND(totaltransactionrevenue / 1000000, 2);
