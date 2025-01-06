@@ -1,7 +1,7 @@
 Question 1: Is there a relationship between date / time of year and when certain orders were placed?
 
 SQL Queries: 
-  SELECT visitid, DATE_TRUNC('quarter', date)::date AS quarter_date, v2productname, v2productcategory 
+  > SELECT visitid, DATE_TRUNC('quarter', date)::date AS quarter_date, v2productname, v2productcategory 
 	FROM all_sessions_clean
 	WHERE transactions IS NOT NULL
 	ORDER BY DATE_TRUNC('quarter', date)::date
@@ -21,12 +21,12 @@ Question 2: Analytics of channelgrouping - look at the visitid and channelgroupi
 
 SQL Queries:  
 
-  SELECT * FROM analytics_clean
+  > SELECT * FROM analytics_clean
 	SELECT * FROM all_sessions_clean
 	
-  SELECT DISTINCT channelgrouping FROM analytics_clean
+  > SELECT DISTINCT channelgrouping FROM analytics_clean
 
-  SELECT v2productname, v2productcategory, channelgrouping
+  > SELECT v2productname, v2productcategory, channelgrouping
 	FROM all_sessions_clean
 	WHERE transactions IS NOT NULL
 	ORDER BY channelgrouping, v2productcategory
@@ -43,7 +43,7 @@ Question 3: Is this the same with general viewing of the website that did not ne
 
 SQL Queries:
 
-  SELECT v2productname, an.channelgrouping, COUNT(*)
+  > SELECT v2productname, an.channelgrouping, COUNT(*)
 	FROM analytics_clean an
 	JOIN all_sessions_clean sesh USING(visitid)
 	GROUP BY an.channelgrouping, v2productname
@@ -61,7 +61,7 @@ Question 4: Stock ratio - ratio in sales_report is total_ordered divided by stoc
 
 SQL Queries:
 
-  SELECT DISTINCT(v2productname), v2productcategory, ratio 
+  > SELECT DISTINCT(v2productname), v2productcategory, ratio 
 	FROM sales_report_clean sr
 	JOIN all_sessions_clean sesh USING(Product_sku)
 	WHERE stocklevel > 0 AND total_ordered > 0
